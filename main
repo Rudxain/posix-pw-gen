@@ -1,0 +1,87 @@
+#!/bin/sh
+set -eufo pipefail
+IFS='
+'
+eprint() { printf '%s\n' "$1" 1>&2; }
+
+# length validation
+# is this locale-sensitive?
+if ! printf %d "$1" >/dev/null 2>&1; then
+	eprint 'expected int'
+	exit 1
+fi
+case "$1" in
+	-*) eprint 'expected unsigned'; exit 1;;
+	*) ;;
+esac
+readonly len="$1"
+# standard PINs are 4 digits
+if [ "$len" -lt 4 ]; then
+	eprint 'bruh'
+	exit 1
+fi
+if [ "$len" -gt 256 ]; then
+	# https://deltarune.wiki/w/Jackenstein's_pumpkin
+	eprint '🎃: YOUR PW IS TOO LONG!'
+	exit 1
+fi
+
+# `xdigit` is `hex`, but includes uppercase
+case "${2:-}" in
+# ASK: should we allow arbitrary `tr` expressions?
+alnum|digit|lower|upper|alpha|graph|print|xdigit|hex)
+	class="$2";;
+punct|sym)
+	eprint 'weird, but ok'
+	class=punct;;
+num) # consistent alias
+	class=digit;;
+blank|cntrl|space)
+	eprint 'bad idea...'
+	exit 1;;
+'')
+	class=hex;;
+*)
+	eprint 'unknown class'
+	exit 1;;
+esac
+readonly class
+
+# ensure `tr` is ASCII-only
+export LC_ALL=C
+
+if [ hex = "$class" ]; then
+	head "-c$(((len >> 1) + 1))" /dev/urandom |
+		od -A n -t x1 |
+		tr -dC '[:xdigit:]' |
+		head "-c$len"
+else
+	out=''
+	# Naive rejection sampling.
+	# Ideally, to generate min bytes,
+	# the bit-string must be interpreted as an int,
+	# then transcoded to radix `range`
+	# where `range` is the size of the charset or class.
+	# A single call to `bc` should be enough:
+	# ```
+	# {
+	# 	printf %s 'obase=3;ibase=16;'
+	# 	head -c16 /dev/urandom |
+	#	od -A n -t x1 |
+	#	tr -dC '[:xdigit:]' |
+	#	tr '[:lower:]' '[:upper:]'
+	# } | bc
+	# ```
+	# - `obase <= 16` each char is a xdigit (except "\")
+	# - `obase > 16` each group of decimal chars delimited by space is a digit
+	while [ ${#out} -lt "$len" ]; do
+		# "byte budget" could be optimized to depend on
+		# char class: smaller ranges need higher budgets.
+		out="$out$(head "-c$((len << 1))" /dev/urandom | tr -dC "[:$class:]")"
+	done
+	# truncate
+	head "-c$len" <<- EOF
+	$out
+	EOF
+fi
+printf '\n'
