@@ -28,7 +28,6 @@ fi
 
 # `xdigit` is `hex`, but includes uppercase
 case "${2:-}" in
-# ASK: should we allow arbitrary `tr` expressions?
 alnum|digit|lower|upper|alpha|graph|print|xdigit)
 	class="[:$2:]";;
 punct|sym)
@@ -36,6 +35,8 @@ punct|sym)
 	class='[:punct:]';;
 num) # consistent alias
 	class='[:digit:]';;
+lonum)
+	class='a-z0-9';;
 hex)
 	class=h;;
 base32|b32)

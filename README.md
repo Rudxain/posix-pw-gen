@@ -12,6 +12,7 @@ Each charset is designed to satisfy a real use-case (except `punct`, only dement
 - `lower|upper|alpha`: legacy systems
 - `digit`: PINs
 - `alnum`: not-so-legacy systems with braindead policies/requirements
+- `lonum`: keyboard [wear-leveling](https://en.wikipedia.org/wiki/Wear_leveling), and for lazy humans who hate modifier keys
 - `hex|xdigit`: [WPA](https://en.wikipedia.org/wiki/Wi-Fi_Protected_Access). Avoids [KDF](https://en.wikipedia.org/wiki/Key_derivation_function) overhead when length is 64.
 - `b32`: reduce glyph confusability when rendering and reading
 - `graph|print`: maximum entropy density, ideal for password managers
