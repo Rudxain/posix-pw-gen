@@ -5,14 +5,9 @@ IFS='
 eprint() { printf '%s\n' "$1" 1>&2; }
 
 # length validation
-# is this locale-sensitive?
-if ! printf %d "$1" >/dev/null 2>&1; then
-	eprint 'expected int'
-	exit 1
-fi
 case "$1" in
-	-*) eprint 'expected unsigned'; exit 1;;
-	*) ;;
+	*[!0-9]*) eprint 'expected decimal digits'; exit 1;;
+	*);;
 esac
 readonly len="$1"
 # standard PINs are 4 digits
